@@ -33,7 +33,8 @@ async function run() {
     const classesCollection = client.db('summerChamp').collection('classes')
     const instructorsCollection = client.db('summerChamp').collection('instructors')
 
-    
+
+
 
     // save a user
     app.put('/users/:email', async (req, res) => {
@@ -50,6 +51,8 @@ async function run() {
     })
 
 
+
+
     // get all classes
     app.get('/classes', async (req, res) => {
         const result = await classesCollection.find().toArray();
@@ -57,9 +60,17 @@ async function run() {
     })
 
 
-    // get all classes based on available seats
+    // get all classes by sorting on available seats
     app.get('/classesByAvailableSeats', async (req, res) => {
         const result = await classesCollection.find().sort({availableSeats: -1}).toArray();
+        res.send(result);
+    })
+
+
+    // get all the approved classes
+    app.get('/approvedClasses', async (req, res) => {
+        const query = {status: 'approved'}
+        const result = await classesCollection.find(query).toArray();
         res.send(result);
     })
 
