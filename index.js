@@ -29,24 +29,48 @@ async function run() {
     // await client.connect();
 
 
+    const usersCollection = client.db('summerChamp').collection('users')
     const classesCollection = client.db('summerChamp').collection('classes')
     const instructorsCollection = client.db('summerChamp').collection('instructors')
 
+    
+
+    // save a user
+    app.put('/users/:email', async (req, res) => {
+        const email = req.params.email;
+        const user = req.body;
+        const query = {email: email};
+        const options = {upsert: true};
+        const updateDoc = {
+            $set: user
+        }
+        const result = await usersCollection.updateOne(query, updateDoc, options);
+        console.log(result);
+        res.send(result);
+    })
 
 
     // get all classes
     app.get('/classes', async (req, res) => {
         const result = await classesCollection.find().toArray();
-        res.send(result)
+        res.send(result);
     })
 
 
     // get all classes based on available seats
     app.get('/classesByAvailableSeats', async (req, res) => {
         const result = await classesCollection.find().sort({availableSeats: -1}).toArray();
-        res.send(result)
+        res.send(result);
     })
 
+
+
+
+    // get all instructors
+    app.get('/instructors', async (req, res) => {
+        const result = await instructorsCollection.find().toArray();
+        res.send(result);
+    })
 
 
     // Send a ping to confirm a successful connection
