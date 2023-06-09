@@ -77,7 +77,7 @@ async function run() {
 
 
     // save a selected class data
-    app.put('/selectedClass/:id', async (req, res) => {
+    app.put('/selectedClasses/:id', async (req, res) => {
       const bookingId = req.params.id;
       const classData = req.body;
       const query = {_id: bookingId};
@@ -91,10 +91,11 @@ async function run() {
     })
 
 
-    
     // get all the selected classes
     app.get('/selectedClasses', async (req, res) => {
-      const result = await selectedClassesCollection.find().toArray();
+      const userEmail = req.query.email;
+      const query = {user: userEmail};
+      const result = await selectedClassesCollection.find(query).toArray();
       res.send(result);
     })
 
