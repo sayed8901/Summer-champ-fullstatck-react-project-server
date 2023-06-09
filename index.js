@@ -1,5 +1,7 @@
 const express = require('express');
 const app = express();
+
+const jwt = require('jsonwebtoken');
 const cors = require('cors');
 require('dotenv').config();
 
@@ -9,6 +11,29 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+// creating a custom middleware function for JWT purpose
+const verifyJWT = (req, res, next) => {
+  const authorization = req.headers.authorization;
+  if (!authorization) {
+    return res
+      .status(401)
+      .send({ error: true, message: "unauthorized access!" });
+  }
+  // extracting token from authorization code (without bearer)
+  const token = authorization.split(" ")[1];
+  console.log("authorization token inside JWT", token);
+
+  // verification
+  jwt.verify(token, process.env.JWT_SECRET_ACCESS_TOKEN, (error, decoded) => {
+    if (error) {
+      return res
+        .status(401)
+        .send({ error: true, message: "unauthorized access!" });
+    }
+    req.decoded = decoded;
+    next();
+  });
+};
 
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
@@ -37,7 +62,34 @@ async function run() {
 
 
 
-    // to save a user & his role
+    // JWT operation
+    app.post("/jwt", (req, res) => {
+      const user = req.body;
+      console.log(user);
+      const token = jwt.sign(user, process.env.JWT_SECRET_ACCESS_TOKEN, {
+        expiresIn: "1h",
+      });
+      // console.log(token);
+      res.send({ token });
+    });
+
+
+    // middleware for admin checking.
+    const verifyAdmin = async (req, res, next) => {
+      const adminCheckEmail = req.decoded.email;
+      const query = { email: adminCheckEmail, role: "admin" };
+      const user = await usersCollection.findOne(query);
+      if (user?.role !== "admin") {
+        res.status(403).send({ error: true, message: "forbidden message" });
+      }
+      next();
+    };
+
+    
+
+
+    // to save a user
+    // also, this api can be used to set role to an user
     app.put('/users/:email', async (req, res) => {
         const email = req.params.email;
         const user = req.body;
@@ -58,7 +110,7 @@ async function run() {
       res.send(result);
     })
 
-    
+
 
 
     // get all classes
@@ -84,7 +136,7 @@ async function run() {
 
 
     // save a selected class data
-    app.put('/selectedClasses/:id', async (req, res) => {
+    app.put('/selectedClasses/:id', verifyJWT, async (req, res) => {
       const bookingId = req.params.id;
       const classData = req.body;
       const query = {_id: bookingId};
