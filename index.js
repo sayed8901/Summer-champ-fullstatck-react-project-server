@@ -21,7 +21,7 @@ const verifyJWT = (req, res, next) => {
   }
   // extracting token from authorization code (without bearer)
   const token = authorization.split(" ")[1];
-  console.log("authorization token inside JWT", token);
+  // console.log("authorization token inside JWT", token);
 
   // verification
   jwt.verify(token, process.env.JWT_SECRET_ACCESS_TOKEN, (error, decoded) => {
@@ -226,6 +226,25 @@ async function run() {
     app.get('/instructors', async (req, res) => {
         const result = await instructorsCollection.find().toArray();
         res.send(result);
+    })
+
+
+    // save newClass data in database
+    app.post('/classes', async (req, res) => {
+      const newClassData = req.body;
+      // console.log(newClassData);
+      const result = await classesCollection.insertOne(newClassData);
+      res.send(result);
+    })
+
+
+    // ToDo: Check
+    // get all addedClasses for individual instructor by email
+    app.get('/classes/:email', verifyJWT, verifyInstructor, async (req, res) => {
+      const userEmail = req.params.email;
+      const query = {instructorEmail: userEmail};
+      const result = await classesCollection.find(query).toArray();
+      res.send(result);
     })
 
 
