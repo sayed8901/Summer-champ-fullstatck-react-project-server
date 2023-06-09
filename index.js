@@ -37,7 +37,7 @@ async function run() {
 
 
 
-    // save a user
+    // to save a user & his role
     app.put('/users/:email', async (req, res) => {
         const email = req.params.email;
         const user = req.body;
@@ -52,6 +52,13 @@ async function run() {
     })
 
 
+    // get all users
+    app.get('/users', async (req, res) => {
+      const result = await usersCollection.find().toArray();
+      res.send(result);
+    })
+
+    
 
 
     // get all classes
@@ -98,6 +105,16 @@ async function run() {
       const result = await selectedClassesCollection.find(query).toArray();
       res.send(result);
     })
+
+
+    // delete a selected class data
+    app.delete('/selectedClasses/:id', async  (req, res) => {
+      const selectedClassID = req.params.id;
+      const query = {_id : selectedClassID};
+      const result = await selectedClassesCollection.deleteOne(query);
+      res.send(result);
+    })
+
 
 
 
