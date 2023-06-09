@@ -30,8 +30,9 @@ async function run() {
 
 
     const usersCollection = client.db('summerChamp').collection('users')
-    const classesCollection = client.db('summerChamp').collection('classes')
     const instructorsCollection = client.db('summerChamp').collection('instructors')
+    const classesCollection = client.db('summerChamp').collection('classes')
+    const selectedClassesCollection = client.db('summerChamp').collection('selectedClasses')
 
 
 
@@ -75,6 +76,28 @@ async function run() {
     })
 
 
+    // save a selected class data
+    app.put('/selectedClass/:id', async (req, res) => {
+      const bookingId = req.params.id;
+      const classData = req.body;
+      const query = {_id: bookingId};
+      const options = {upsert: true};
+      const updateDoc = {
+          $set: classData
+      }
+      const result = await selectedClassesCollection.updateOne(query, updateDoc, options);
+      console.log(result);
+      res.send(result);
+    })
+
+
+    
+    // get all the selected classes
+    app.get('/selectedClasses', async (req, res) => {
+      const result = await selectedClassesCollection.find().toArray();
+      res.send(result);
+    })
+
 
 
     // get all instructors
@@ -103,5 +126,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log(`Champ is running at: ${port} kmp`);
+    console.log(`Champ is running at: ${port} kmph`);
 })
