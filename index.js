@@ -67,7 +67,7 @@ async function run() {
       const user = req.body;
       console.log(user);
       const token = jwt.sign(user, process.env.JWT_SECRET_ACCESS_TOKEN, {
-        expiresIn: "1h",
+        expiresIn: "2h",
       });
       // console.log(token);
       res.send({ token });
@@ -80,6 +80,18 @@ async function run() {
       const query = { email: adminCheckEmail, role: "admin" };
       const user = await usersCollection.findOne(query);
       if (user?.role !== "admin") {
+        res.status(403).send({ error: true, message: "forbidden message" });
+      }
+      next();
+    };
+
+
+    // middleware for instructor checking.
+    const verifyInstructor = async (req, res, next) => {
+      const instructorCheckEmail = req.decoded.email;
+      const query = { email: instructorCheckEmail, role: "instructor" };
+      const user = await usersCollection.findOne(query);
+      if (user?.role !== "instructor") {
         res.status(403).send({ error: true, message: "forbidden message" });
       }
       next();
@@ -111,6 +123,46 @@ async function run() {
     })
 
 
+    // get an user
+    // also, this api can be used to get role of an user
+    app.get('/users/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = {email : email}
+      const result = await usersCollection.findOne(query);
+      res.send(result);
+    })
+
+
+
+
+    // admin related APIs
+
+    // to get an admin
+    app.get("/users/admin/:email", verifyJWT, async (req, res) => {
+      const adminEmail = req.params.email;
+      if (req.decoded.email !== adminEmail) {
+        res.status(402).send({ error: true, message: "unauthorized Access" });
+      }
+      const query = { email: adminEmail };
+      const user = await usersCollection.findOne(query);
+      const result = { admin: user?.role === "admin" };
+      res.send(result);
+    });
+
+
+    // to get an instructor
+    app.get("/users/instructor/:email", verifyJWT, async (req, res) => {
+      const instructorEmail = req.params.email;
+      if (req.decoded.email !== instructorEmail) {
+        res.status(402).send({ error: true, message: "unauthorized Access" });
+      }
+      const query = { email: instructorEmail };
+      const user = await usersCollection.findOne(query);
+      const result = { instructor: user?.role === "instructor" };
+      res.send(result);
+    });
+
+
 
 
     // get all classes
@@ -136,7 +188,7 @@ async function run() {
 
 
     // save a selected class data
-    app.put('/selectedClasses/:id', verifyJWT, async (req, res) => {
+    app.put('/selectedClasses/:id', async (req, res) => {
       const bookingId = req.params.id;
       const classData = req.body;
       const query = {_id: bookingId};
@@ -151,7 +203,7 @@ async function run() {
 
 
     // get all the selected classes
-    app.get('/selectedClasses', async (req, res) => {
+    app.get('/selectedClasses', verifyJWT, async (req, res) => {
       const userEmail = req.query.email;
       const query = {user: userEmail};
       const result = await selectedClassesCollection.find(query).toArray();
@@ -176,6 +228,9 @@ async function run() {
         res.send(result);
     })
 
+
+
+    
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
