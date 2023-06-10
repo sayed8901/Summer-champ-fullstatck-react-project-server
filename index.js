@@ -238,7 +238,7 @@ async function run() {
     })
 
 
-    // ToDo: Check
+
     // get all addedClasses for individual instructor by email
     app.get('/classes/:email', verifyJWT, verifyInstructor, async (req, res) => {
       const userEmail = req.params.email;
