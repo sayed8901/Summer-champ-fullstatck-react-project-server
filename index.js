@@ -36,7 +36,7 @@ const verifyJWT = (req, res, next) => {
 };
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ebwgrc3.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -116,8 +116,23 @@ async function run() {
     })
 
 
+    // to make class status set to "approved" or "denied"
+    app.put('/classes/:id', async (req, res) => {
+        const id = req.params.id;
+        const approvalStatus = req.body;
+        const query = {_id: new ObjectId(id)};
+        const options = {upsert: true};
+        const updateDoc = {
+            $set: approvalStatus
+        }
+        const result = await classesCollection.updateOne(query, updateDoc, options);
+        console.log(result);
+        res.send(result);
+    })
+
+
     // get all users
-    app.get('/users', async (req, res) => {
+    app.get('/users', verifyJWT, verifyAdmin, async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     })
@@ -165,8 +180,15 @@ async function run() {
 
 
 
-    // get all classes
+    // get all classes open for anyone
     app.get('/classes', async (req, res) => {
+        const result = await classesCollection.find().toArray();
+        res.send(result);
+    })
+
+
+    // get all classes open for admin only
+    app.get('/admin/classes', verifyJWT, verifyAdmin, async (req, res) => {
         const result = await classesCollection.find().toArray();
         res.send(result);
     })
@@ -185,6 +207,8 @@ async function run() {
         const result = await classesCollection.find(query).toArray();
         res.send(result);
     })
+
+    
 
 
     // save a selected class data
