@@ -283,6 +283,16 @@ async function run() {
     })
 
 
+    // get all enrolledClasses for individual student by email
+    app.get('/enrolledClasses/:email', verifyJWT, async (req, res) => {
+      const userEmail = req.params.email;
+      const query = {user: userEmail};
+      const result = await paymentCollection.find(query).toArray();
+      res.send(result);
+    })
+
+
+
 
 
     // create payment intent API
