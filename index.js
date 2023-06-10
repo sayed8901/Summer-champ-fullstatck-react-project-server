@@ -287,7 +287,7 @@ async function run() {
     app.get('/enrolledClasses/:email', verifyJWT, async (req, res) => {
       const userEmail = req.params.email;
       const query = {user: userEmail};
-      const result = await paymentCollection.find(query).toArray();
+      const result = await paymentCollection.find(query).sort({date: -1}).toArray();
       res.send(result);
     })
 
