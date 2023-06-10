@@ -5,7 +5,10 @@ const jwt = require('jsonwebtoken');
 const cors = require('cors');
 require('dotenv').config();
 
+const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
+
 const port = process.env.PORT || 5000;
+
 
 // moddleware
 app.use(cors());
@@ -58,6 +61,7 @@ async function run() {
     const instructorsCollection = client.db('summerChamp').collection('instructors')
     const classesCollection = client.db('summerChamp').collection('classes')
     const selectedClassesCollection = client.db('summerChamp').collection('selectedClasses')
+    const paymentCollection = client.db('summerChamp').collection('payments')
 
 
 
@@ -209,6 +213,13 @@ async function run() {
     })
 
     
+    // get a single class by ID 
+    app.get('/classes/:id', verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)};
+      const result = await classesCollection.findOne(query);
+      res.send(result);
+    })
 
 
     // save a selected class data
@@ -264,12 +275,51 @@ async function run() {
 
 
     // get all addedClasses for individual instructor by email
-    app.get('/classes/:email', verifyJWT, verifyInstructor, async (req, res) => {
+    app.get('/instructor/classes/:email', verifyJWT, verifyInstructor, async (req, res) => {
       const userEmail = req.params.email;
       const query = {instructorEmail: userEmail};
       const result = await classesCollection.find(query).toArray();
       res.send(result);
     })
+
+
+
+
+    // create payment intent API
+
+    app.post("/create-payment-intent", verifyJWT, async (req, res) => {
+      const { price } = req.body;
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: price * 100,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
+
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
+
+
+    
+    // payment related API
+
+    app.post("/payments", verifyJWT, async (req, res) => {
+      const paymentInfo = req.body;
+      const insertResult = await paymentCollection.insertOne(paymentInfo);
+
+      const query = {bookingId : paymentInfo.classId}
+      const deleteResult = await selectedClassesCollection.deleteOne(query);
+
+      res.send({
+        insertResult, 
+        deleteResult
+      });
+    });
+
+
+
 
 
 
