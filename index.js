@@ -184,7 +184,7 @@ async function run() {
 
 
 
-    // get all classes open for anyone
+    // get all classes that are open for anyone
     app.get('/classes', async (req, res) => {
         const result = await classesCollection.find().toArray();
         res.send(result);
@@ -255,6 +255,21 @@ async function run() {
     })
 
 
+
+
+    // to save a instructor
+    app.put('/instructors/:email', verifyJWT, verifyAdmin, async (req, res) => {
+      const email = req.params.email;
+      const user = req.body;
+      const query = {email: email};
+      const options = {upsert: true};
+      const updateDoc = {
+          $set: user
+      }
+      const result = await instructorsCollection.updateOne(query, updateDoc, options);
+      console.log(result);
+      res.send(result);
+    })
 
 
     // get all instructors
