@@ -307,6 +307,14 @@ async function run() {
     })
 
 
+    // to get number of payment completed class to get number of enrolled students for that individual class
+    app.get('/payment-enrolled-students/:classID', verifyJWT, verifyInstructor, async (req, res) => {
+      const paidClassID = req.params.classID;
+      const query = {classId: paidClassID}
+      const result = await paymentCollection.find(query).toArray();
+      res.send(result)
+    })
+
 
 
 
@@ -334,12 +342,20 @@ async function run() {
       const paymentInfo = req.body;
       const insertResult = await paymentCollection.insertOne(paymentInfo);
 
-      const query = {bookingId : paymentInfo.classId}
-      const deleteResult = await selectedClassesCollection.deleteOne(query);
+      const deleteQuery = {bookingId : paymentInfo.classId}
+      const deleteResult = await selectedClassesCollection.deleteOne(deleteQuery);
+
+      const updateQuery = {_id: new ObjectId(paymentInfo.classId)};
+      const options = {upsert: true};
+      const updateDoc = {
+        $inc: { availableSeats: -1 }
+      }
+      const updateResult = await classesCollection.updateOne(updateQuery, updateDoc, options);
 
       res.send({
         insertResult, 
-        deleteResult
+        deleteResult,
+        updateResult,
       });
     });
 
