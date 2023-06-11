@@ -198,9 +198,9 @@ async function run() {
     })
 
 
-    // get all classes by sorting on available seats
-    app.get('/classesByAvailableSeats', async (req, res) => {
-        const result = await classesCollection.find().sort({availableSeats: -1}).toArray();
+    // get all classes by sorting on enrolledStudents
+    app.get('/classesByEnrolledStudents', async (req, res) => {
+        const result = await classesCollection.find().sort({enrolledStudents: -1}).toArray();
         res.send(result);
     })
 
@@ -348,7 +348,10 @@ async function run() {
       const updateQuery = {_id: new ObjectId(paymentInfo.classId)};
       const options = {upsert: true};
       const updateDoc = {
-        $inc: { availableSeats: -1 }
+        $inc: {
+          availableSeats: -1,
+          enrolledStudents: +1,
+        }
       }
       const updateResult = await classesCollection.updateOne(updateQuery, updateDoc, options);
 
