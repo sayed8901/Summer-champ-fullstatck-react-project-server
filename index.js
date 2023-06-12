@@ -237,6 +237,21 @@ async function run() {
     })
 
 
+    // update a classData by ID
+    app.put('/updateClass/:id', verifyJWT, async (req, res) => {
+      const updateClassId = req.params.id;
+      const classData = req.body;
+      const query = {_id: new ObjectId(updateClassId)};
+      const options = {upsert: true};
+      const updateDoc = {
+          $set: classData
+      }
+      const result = await classesCollection.updateOne(query, updateDoc, options);
+      console.log(result);
+      res.send(result);
+    })
+
+
     // get all the selected classes
     app.get('/selectedClasses', verifyJWT, async (req, res) => {
       const userEmail = req.query.email;
@@ -310,7 +325,7 @@ async function run() {
 
 
     // to get number of payment completed class to get number of enrolled students for that individual class
-    // extra created: not been used
+    // extra created: not been yet
     app.get('/payment-enrolled-students/:classID', verifyJWT, verifyInstructor, async (req, res) => {
       const paidClassID = req.params.classID;
       const query = {classId: paidClassID}
