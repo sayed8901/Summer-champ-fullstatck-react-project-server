@@ -238,7 +238,7 @@ async function run() {
 
 
     // update a classData by ID
-    app.put('/updateClass/:id', verifyJWT, async (req, res) => {
+    app.put('/updateClass/:id', verifyJWT, verifyInstructor, async (req, res) => {
       const updateClassId = req.params.id;
       const classData = req.body;
       const query = {_id: new ObjectId(updateClassId)};
@@ -250,6 +250,22 @@ async function run() {
       console.log(result);
       res.send(result);
     })
+
+
+    // to send feedback
+    app.put('/feedback/:id', verifyJWT, verifyAdmin, async (req, res) => {
+      const feedbackId = req.params.id;
+      const feedbackData = req.body;
+      const query = {_id: new ObjectId(feedbackId)};
+      const options = {upsert: true};
+      const updateDoc = {
+          $set: feedbackData
+      }
+      const result = await classesCollection.updateOne(query, updateDoc, options);
+      console.log(result);
+      res.send(result);
+    })
+
 
 
     // get all the selected classes
