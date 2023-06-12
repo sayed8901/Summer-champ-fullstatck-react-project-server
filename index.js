@@ -223,7 +223,7 @@ async function run() {
 
 
     // save a selected class data
-    app.put('/selectedClasses/:id', async (req, res) => {
+    app.put('/selectedClasses/:id', verifyJWT, async (req, res) => {
       const bookingId = req.params.id;
       const classData = req.body;
       const query = {_id: bookingId};
@@ -247,7 +247,7 @@ async function run() {
 
 
     // delete a selected class data
-    app.delete('/selectedClasses/:id', async  (req, res) => {
+    app.delete('/selectedClasses/:id', verifyJWT, async  (req, res) => {
       const selectedClassID = req.params.id;
       const query = {_id : selectedClassID};
       const result = await selectedClassesCollection.deleteOne(query);
@@ -279,8 +279,9 @@ async function run() {
     })
 
 
-    // save newClass data in database
-    app.post('/classes', async (req, res) => {
+
+    // save newClass data by an instructor
+    app.post('/instructors/add-class', verifyJWT, verifyInstructor, async (req, res) => {
       const newClassData = req.body;
       // console.log(newClassData);
       const result = await classesCollection.insertOne(newClassData);
@@ -307,7 +308,9 @@ async function run() {
     })
 
 
+
     // to get number of payment completed class to get number of enrolled students for that individual class
+    // extra created: not been used
     app.get('/payment-enrolled-students/:classID', verifyJWT, verifyInstructor, async (req, res) => {
       const paidClassID = req.params.classID;
       const query = {classId: paidClassID}
